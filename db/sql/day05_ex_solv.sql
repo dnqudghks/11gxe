@@ -192,11 +192,49 @@ FROM
 ;
 
 -- 문제 ] 사원의 이름, 직급을 조회하는데
---          이름의 세번째 글자와 마지막 글자는 보여주고 나머지는 *로 표시해서 조회하세요.
-
+--          이름의 세번째 글자와 마지막 글자는 보여주고 나머지는 * 로 표시해서 조회하세요.
+--  SMITH   ==> **I ==> **I*    ==> **I*H
+SELECT
+    CONCAT(
+        RPAD(LPAD(SUBSTR(ename, 3, 1), 3, '*'), LENGTH(ename) - 1, '*'),
+        SUBSTR(ename, -1)
+    ) 이름
+FROM
+    emp
+;
 
 --  문제 2 ] 사원의 정보를 조회하는데
 --          S**** 사원 - CLARK - 급여 : *0*
 --          형식으로 출력되게 하세요. 
 --          급여의 표현은 두번째 숫자만 표시하고 
 --          나머지는 * 로 표시하세요.
+SELECT
+    RPAD(SUBSTR(ename, 1, 1), LENGTH(ename), '*') ||
+    ' 사원 - ' || job || ' - 급여 : ' ||
+    RPAD(LPAD(SUBSTR(TO_CHAR(sal), 2, 1), 2, '*'), LENGTH(TO_CHAR(sal)), '*') 사원정보
+FROM
+    emp
+;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
