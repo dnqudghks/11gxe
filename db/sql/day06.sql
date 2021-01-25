@@ -196,41 +196,115 @@ ORDER BY
 
 /*
     급여가 $1000 미만이면 급여를 20% 인상하고
-            $1001 ~ 3000 이면 15% 인상하고
+            $1000 ~ 3000 이면 15% 인상하고
             3001 이상이면 10% 이상한 급여를 지급하려 한다.
     사원들의 사원이름, 원급여, 지급급여를 조회하세요.
 */
+SELECT
+    ename 사원이름, sal 급여,
+    DECODE(FLOOR(sal / 1000), 0, sal * 1.2,
+                              1, sal * 1.15,
+                              2, sal * 1.15,
+                              3, DECODE(MOD(sal, 1000), 0, sal * 1.15, sal * 1.1),
+                              sal * 1.1
+    ) 지급급여
+FROM
+    emp
+;
 
+SELECT
+    ename 사원이름, sal 급여,
+    CASE    WHEN sal < 1000 THEN sal * 1.2
+            WHEN sal <= 3000 THEN sal * 1.15
+            ELSE sal * 1.1
+    END 지급급여
+FROM
+    emp
+;
 -- decode()와 case when then 두가지로 처리하세요.
 /*
     문제 1 ]
         사원이름이 4글자이면 'Mr.'를 이름앞에 붙이고
         4글자가 아니면 '사원'을 이름뒤에 붙여서 조회하세요.
 */
-
+SELECT
+    ename 사원이름, LENGTH(ename) 이름글자수,
+    DECODE(LENGTH(ename), 4, CONCAT('Mr.', ename),
+                            CONCAT(ename, '사원')
+    ) 표시이름1,
+    CASE LENGTH(ename) WHEN 4 THEN CONCAT('Mr.', ename)
+                        ELSE CONCAT(ename, '사원')
+    END 표시이름2,
+    CASE WHEN LENGTH(ename) = 4 THEN CONCAT('Mr.', ename)
+            ELSE CONCAT(ename, '사원')
+    END 표시이름3
+FROM
+    emp
+;
 /*
     문제 2 ]
         부서번호가 10번 혹은 20번이면 급여 + 커미션의 결과를 출력하고
         (커미션이 없으면 0으로 대신 연산하고)
         그 이외의 부서는 급여만 출력하세요.
 */
-
+SELECT 
+    ename, deptno, sal, comm,
+    CASE WHEN deptno IN (10, 20) THEN sal + NVL(comm, 0)
+         ELSE sal
+    END 지급급여1,
+    DECODE(deptno, 10, sal + NVL(comm, 0),
+                    20, sal + NVL(comm, 0),
+                    sal
+    ) 지급급여2,
+    DECODE(FLOOR(deptno / 30), 0, sal + NVL(comm, 0),
+                                sal
+    ) 지급급여3
+FROM
+    emp
+;
 /*
     문제 3 ]
         입사요일이 토요일, 일요일인 사원은 급여를 20% 증가해서 지급하고
         그 이외에 입사한 사람은 급여의 10%를 더해서 지급하세요.
 */
+SELECT
+    ename, TO_CHAR(hiredate, 'day') 입사요일,
+    CASE    WHEN TO_CHAR(hiredate, 'day') IN ('토요일', '일요일') THEN sal * 1.2
+            ELSE sal * 1.1
+    END 지급급여1,
+    DECODE(TO_CHAR(hiredate, 'day'),    '토요일', sal * 1.2,
+                                        '일요일', sal * 1.2,
+                                        sal * 1.1
+    ) 지급급여2
+FROM
+    emp
+;
+
+SELECT
+    TO_CHAR(sysdate, 'day') 오늘요일
+FROM
+    dual
+;
 
 /*
     문제 4 ]
         근무월수가 450개월 이상이면 커미션을 500 달러를 추가해서 지급하고(널인경우는 0으로 연산)
         근무월수가 450개월 미만이면 커미션을 현재 커미션만 지급하도록 하세요.
         
-        사원이름, 근무개월수, 급여, 커미션, 지급급여 를 조회하세요.
+        사원이름, 근무개월수, 급여, 커미션, 지급커미션 를 조회하세요.
 */
 
 SELECT
-    MONTHS_BETWEEN(SYSDATE, hiredate)
+    ename 사원이름, FLOOR(MONTHS_BETWEEN(SYSDATE, hiredate)) 근무개월수, sal 급여, comm 커미션,
+    DECODE(FLOOR(MONTHS_BETWEEN(SYSDATE, hiredate) / 450), 0, comm,
+                                                            NVL(comm, 0) + 500
+    ) 지급커미션1,
+    CASE FLOOR(MONTHS_BETWEEN(SYSDATE, hiredate) / 450) WHEN 0 THEN comm
+        ELSE NVL(comm, 0) + 500
+    END 지급커미션2,
+    CASE WHEN FLOOR(MONTHS_BETWEEN(SYSDATE, hiredate)) < 450 THEN comm
+        ELSE NVL(comm, 0) + 500
+    END 지급커미션3
 FROM
     emp
 ;
@@ -238,13 +312,33 @@ FROM
 
 /*
     문제 5 ]
-        이름의 글자수가 5글자 이상인 사람은 3글자***를 붙여서 출력하고
-        이름의 글자수가 4글자 미만인 사람은 모두 보여지도록 조회하세요.
+        이름의 글자수가 5글자 이상인 사람은 앞 세글자는 표현하고 나머지는 *을 붙여서 출력하고
+        이름의 글자수가 4글자 이하인 사람은 모두 보여지도록 조회하세요.
         
         사원이름, 이름글자수, 표시이름   의 형태로 조회하세요.
+        
+        힌트 ]
+            이름 글자수가 5글자 미만인 사람과 그 외의 사람...
+            
+            FLOOR(LENGTH(ename) / 5)    ==> 5글자 미만인 경우 0
+                                            그 이외의 경우    1~
 */
 
-
+SELECT
+    ename 사원이름, LENGTH(ename) 이름글자수, 
+    DECODE(
+        FLOOR(LENGTH(ename) / 5), 0, ename,
+                                    RPAD(SUBSTR(ename, 1, 3), LENGTH(ename), '*')
+    ) 표시이름1,
+    CASE FLOOR(LENGTH(ename) / 5) WHEN 0 THEN ename
+        ELSE RPAD(SUBSTR(ename, 1, 3), LENGTH(ename), '*')
+    END 표시이름2,
+    CASE WHEN LENGTH(ename) < 5 THEN ename
+        ELSE RPAD(SUBSTR(ename, 1, 3), LENGTH(ename), '*')
+    END 표시이름3
+FROM
+    emp
+;
 
 
 
