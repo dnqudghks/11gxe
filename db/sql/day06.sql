@@ -216,6 +216,7 @@ SELECT
     ename 사원이름, sal 급여,
     CASE    WHEN sal < 1000 THEN sal * 1.2
             WHEN sal <= 3000 THEN sal * 1.15
+--            WHEN sal BETWEEN 1000 AND 3000 THEN sal * 1.15
             ELSE sal * 1.1
     END 지급급여
 FROM
