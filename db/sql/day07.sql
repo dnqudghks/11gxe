@@ -1326,8 +1326,53 @@ SELECT
 FROM
     EMP
 WHERE
-    1 = 1
+    1 = 2
 ORDER BY
     EMPNO
 ;
+
+
+-- 사원들의 사원이름, 부서번호, 부서급여합계 를 조회하세요.
+
+-- 부서급여합계
+SELECT
+    SUM(sal)
+FROM
+    emp
+GROUP BY
+    deptno
+;
+
+SELECT
+    ename 사원이름, deptno 부서번호, 
+    (
+        SELECT
+            SUM(sal)
+        FROM
+            emp
+        GROUP BY
+            deptno
+        HAVING
+            deptno = e.deptno
+    ) 부서급여합계
+FROM
+    emp e
+;
+
+/*
+    참고 ]
+        데이터베이스에서 객체의 소속을 밝히는 방법은
+            .
+        으로 구분해서 처리한다.
+        
+        따라서 원칙적으로
+        select * from emp;
+        라는 질의명령은
+        SELECT
+            SCOTT.emp.*, e.*
+        FROM
+            SCOTT.emp e
+        ;
+*/
+
 
