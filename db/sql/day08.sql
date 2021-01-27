@@ -371,6 +371,13 @@ MODIFY ename VARCHAR2(15 CHAR)
         1.  사원이름 뒤에 ' 사원' 을 붙여서 수정하세요.
         2.  'KING'의 이름 뒤에는 ' 사장' 을 붙여서 수정하세요.
 */
+UPDATE
+    comp
+SET
+    ename = DECODE(ename, 'KING', CONCAT(ename, ' 사장'),
+                            CONCAT(ename, ' 사원')
+            )
+;
 
 /*
     문제 5 ]
@@ -400,7 +407,7 @@ MODIFY ename VARCHAR2(15 CHAR)
 /*
     문제 7 ]
         comp1 테이블에 다음 데이터를 삭제하세요.
-        이름의 마지막 글자가 'S' 인 사원을 삭제하세요.
+        이름의 마지막 글자(공백문자 이전문자)가 'S' 인 사원을 삭제하세요.
 */
 
 
