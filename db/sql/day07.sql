@@ -829,58 +829,336 @@ WHERE
         사원이름, 직급, 부서번호를 조회하세요.
 */
 
+-- SMITH 사원의 직급 조회 명령
+SELECT
+    job
+FROM
+    emp
+WHERE
+    ename = 'SMITH'
+;
+
+SELECT
+    ename, job, deptno
+FROM
+    emp
+WHERE
+    job =   (
+                SELECT
+                    job
+                FROM
+                    emp
+                WHERE
+                    ename = 'SMITH'
+            )
+;
 /*
     문제 2]
         회사 평균 급여보다 급여를 적게 받는 사원들의
         사원이름, 직급, 급여를 조회하세요.
 */
+-- 회사 평균 급여
+SELECT
+    AVG(sal)
+FROM
+    emp
+;
 
+
+SELECT
+    ename, job, sal
+FROM
+    emp
+WHERE
+    sal <   (
+                SELECT
+                    AVG(sal)
+                FROM
+                    emp
+            )
+;
 /*
     문제 3 ]
         회사 최고 급여자의 사원번호, 사원이름, 급여를 조회하세요.
 */
-
+SELECT
+    empno, ename, sal
+FROM
+    emp
+WHERE
+    sal =   (
+                SELECT
+                    MAX(sal)
+                FROM
+                    emp
+            )
+;
 /*
     문제 4 ]
         KING 사원보다 이후 입사한 사원의
         사원번호, 사원이름, 입사일을 조회하세요.
 */
 
+-- KING 회장의 입사일
+SELECT
+    hiredate
+FROM
+    emp
+WHERE
+    ename = 'KING'
+;
+
+SELECT
+    empno, ename, hiredate
+FROM
+    emp
+WHERE
+    hiredate > ( -- KING 의 입사일
+                    SELECT
+                        hiredate
+                    FROM
+                        emp
+                    WHERE
+                        ename = 'KING'
+                )
+;
 /*
     문제 5 ]
-        각 사원의 사원이름, 급여, 급여와 회사 평균 급여와의 차를 조회하세요.
-        단, 차는 절대값으로 표시되게 하세요.
+        각 사원의 사원이름, 급여, 급여와 회사 평균 급여(AVG())와의 차를 조회하세요.
+        단, 차는 절대값으로 표시(ABS())되게 하세요.
 */
+-- 회사 평균 급여
+SELECT
+    AVG(sal)
+FROM
+    emp
+;
 
+SELECT
+    ename 사원이름, sal 급여,
+    TRUNC(ABS(
+        sal - (
+                    SELECT
+                        AVG(sal)
+                    FROM
+                        emp
+                )
+    ), 2) "평균급여와의 차"
+FROM
+    emp
+;
 /*
     문제 6 ]
         급여의 합이 제일 높은 부서 소속의 사원들의
         사원번호, 사원이름, 급여 를 조회하세요.
 */
+-- 부서별 급여의 합이 제일 큰 부서번호
+SELECT
+    deptno, SUM(sal)
+FROM
+    emp
+GROUP BY
+    deptno
+HAVING
+    SUM(sal) = (
+                    SELECT 
+                        MAX(SUM(sal))
+                    FROM
+                        emp
+                    GROUP BY
+                        deptno
+                )
+;
+
+
+SELECT
+    empno, ename, sal, deptno
+FROM
+    emp
+WHERE
+    deptno =    (
+                    SELECT
+                        deptno
+                    FROM
+                        emp
+                    GROUP BY
+                        deptno
+                    HAVING
+                        SUM(sal) = (
+                                        SELECT 
+                                            MAX(SUM(sal))
+                                        FROM
+                                            emp
+                                        GROUP BY
+                                            deptno
+                                    )
+                )
+;
+
 
 /*
     문제 7 ]
         커미션을 받는 직원이 한사람이라도 있는 부서와 같은 부서에 속한 사원들의
         사원번호, 사원이름, 부서번호, 커미션을 조회하세요.
 */
+-- 커미션을 받는 사원의 사원번호, 부서번호 조회
+SELECT
+    DISTINCT deptno
+FROM
+    emp
+WHERE
+    comm IS NOT NULL
+;
+
+SELECT
+    deptno
+FROM
+    emp
+GROUP BY
+    deptno
+HAVING
+    COUNT(comm) > 0
+;
+
+-- 위의 결과의 부서에 속한 사원들의 정보 조회
+SELECT
+    empno 사원번호, ename 사원이름, deptno 부서번호, comm 커미션
+FROM
+    emp
+WHERE
+    deptno IN  (
+                    SELECT
+                        deptno
+                    FROM
+                        emp
+                    GROUP BY
+                        deptno
+                    HAVING
+                        COUNT(comm) > 0
+                )
+;
+
+
+SELECT
+    empno 사원번호, ename 사원이름, deptno 부서번호, comm 커미션
+FROM
+    emp
+WHERE
+    deptno IN  (
+                    SELECT
+                        DISTINCT deptno
+                    FROM
+                        emp
+                    WHERE
+                        comm IS NOT NULL
+                )
+;
 
 /*
     문제 8 ]
         회사 평균급여보다 높고 이름의 글자수가 4 또는 5글자인 사원들의
         사원이름, 이름글자수, 직급, 부서번호를 조회하세요.
 */
+-- 회사 평균 급여
+SELECT
+    AVG(sal)
+FROM
+    emp
+;
+
+SELECT
+    ename 사원이름, LENGTH(ename) 이름글자수, job 직급, deptno 부서번호
+FROM
+    emp
+WHERE
+    LENGTH(ename) IN (4, 5)
+    AND sal > (
+                    SELECT
+                        AVG(sal)
+                    FROM
+                        emp
+                )
+;
+
+/*
+    IN
+    ==> 연산자 자체가 비교를 하는 연산자
+        비교대상만 필요
+        
+        예 ]
+            deptno IN (10, 30)
+    ANY, ALL
+    ==> 비교기능은 없고 데이터만 선택하는 연산자
+        따라서 비교연산자, 비교대상이 필요하다.
+            
+            sal = ANY (1000, 500)
+            
+    EXISTS
+    ==> 연산자 자체의 결과값이 참또는 거짓으로 반환해준다.
+        따라서 대상없이 사용하는 연산자
+        
+        EXISTS (select * from emp)
+*/
+
 
 /*
     문제 9 ]
         사원이름이 4글자인 사원과 같은 직급을 가진 사원들의 
         사원이름, 직급 을 조회하세요.
 */
+-- 이름이 네글자인 사원의 직급
+SELECT
+    DISTINCT job
+FROM
+    emp
+WHERE
+    LENGTH(ename) = 4
+;
 
+
+SELECT
+    ename 사원이름, job 직급
+FROM
+    emp
+WHERE
+    job = ANY (
+                    SELECT
+                        DISTINCT job
+                    FROM
+                        emp
+                    WHERE
+                        LENGTH(ename) = 4
+                ) 
+;
 /*
     문제 10 ]
         입사년도가 81년이 아닌 사원과 같은 부서에 소속된 사원들의
         사원이름, 부서번호, 입사일을 조회하세요.
 */
+
+-- 입사년도가 81년이 아닌 사원들의 부서 조회
+SELECT
+    DISTINCT deptno
+FROM
+    emp
+WHERE
+    NOT TO_CHAR(hiredate, 'yy') = '81'
+;
+
+SELECT
+    ename 사원이름, deptno 부서번호, hiredate 입사일
+FROM
+    emp
+WHERE
+    deptno = ANY    (
+                        SELECT
+                            DISTINCT deptno
+                        FROM
+                            emp
+                        WHERE
+                            NOT TO_CHAR(hiredate, 'yy') = '81'
+                    )
+;
 
 /*
     문제 11 ]
@@ -888,21 +1166,168 @@ WHERE
         사원이름, 급여, 직급을 조회하세요.
         ==> ANY 연산자로 처리
 */
+-- 직책별 평균급여
+SELECT
+    AVG(sal)
+FROM
+    emp
+GROUP BY
+    job
+;
 
+SELECT
+    ename 사원이름, sal 급여, job 직급
+FROM
+    emp
+WHERE
+    sal > ANY   (
+                    SELECT
+                        AVG(sal)
+                    FROM
+                        emp
+                    GROUP BY
+                        job
+                )
+;
 /*
     문제 12 ]
         모든 년도별 입사자의 평균 급여보다 많이 받는 사원들의
         사원이름, 급여, 입사년도 를 조회하세요.(ALL 연산자 사용)
 */
+-- 년도별 평균급여
+SELECT
+    TO_CHAR(hiredate, 'yyyy') 입사년도, AVG(sal)
+FROM
+    emp
+GROUP BY
+    TO_CHAR(hiredate, 'yyyy')
+;
 
+SELECT
+    ename 사원이름, sal 급여, hiredate 입사년도
+FROM
+    emp
+WHERE
+    sal > ALL (
+                    SELECT
+                        AVG(sal)
+                    FROM
+                        emp
+                    GROUP BY
+                        TO_CHAR(hiredate, 'yyyy')
+                )
+;
 /*
     문제 13 ]
-        회사 최고 연봉자의 이름 글자수와 같은 글자수의 사원이 존재하면
+        회사 최고 급여자의 이름 글자수와 같은 글자수의 사원이 존재하면
         모든 사원들의 사원이름, 직급, 급여를 조회하고
         그렇지 않으면 조회하지 마세요.(EXISTS 사용)
 */
 
-/*
+-- 최고 연봉자의 이름
+SELECT
+    ename
+FROM
+    emp
+WHERE
+    sal = (
+                SELECT
+                    MAX(sal)
+                FROM
+                    emp
+            )
+;
 
-*/
+-- 최급급여자와 이름길이가 같은 사원
+SELECT
+    empno
+FROM
+    emp
+WHERE
+    LENGTH(ename) = (-- 최고급여자의 이름길이 
+                        SELECT
+                            LENGTH(ename)
+                        FROM
+                            emp
+                        WHERE
+                            sal = (
+                                        SELECT
+                                            MAX(sal)
+                                        FROM
+                                            emp
+                                    )
+                    )
+;
+
+--
+SELECT
+    ename 사원이름, job 직급, sal 급여
+FROM
+    emp
+WHERE
+    EXISTS ( --최고급여자와 같은 이름길이의 사원 
+                SELECT
+                    empno
+                FROM
+                    emp
+                WHERE
+                    LENGTH(ename) = (-- 최고급여자의 이름길이 
+                                        SELECT
+                                            LENGTH(ename)
+                                        FROM
+                                            emp
+                                        WHERE
+                                            sal = (
+                                                        SELECT
+                                                            MAX(sal)
+                                                        FROM
+                                                            emp
+                                                    )
+                                    )
+            )
+;
+
+
+
+
+
+
+SELECT
+    ename 사원이름, job 직급, sal 급여
+FROM
+    emp
+WHERE
+    EXISTS (
+                SELECT
+                    empno
+                FROM
+                    emp
+                WHERE
+                    LENGTH(ename) = (
+                                        SELECT
+                                            LENGTH(ename)
+                                        FROM
+                                            emp
+                                        WHERE
+                                            sal = (
+                                                        SELECT
+                                                            MAX(sal)
+                                                        FROM
+                                                            emp
+                                                    )
+                                    )
+            )
+;
+
+-----------------------------------------------------------------------
+
+SELECT
+    EMPNO, ENAME, DEPTNO
+FROM
+    EMP
+WHERE
+    1 = 1
+ORDER BY
+    EMPNO
+;
 
