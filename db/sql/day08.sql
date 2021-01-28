@@ -361,7 +361,7 @@ MODIFY ename VARCHAR2(15 CHAR)
         comp 테이블에 다음 데이터를 입력하세요.
         이름 : 신비
         직책 : 수습
-        급여 : 아직 못정함
+        급여 : 아직 못정함(NULL)
         입사일 : 2021/01/25
 */
 
@@ -403,11 +403,21 @@ SET
         comp1 테이블에 다음 데이터를 삭제하세요
         직급이 'MANAGER'이고 부서번호가 10인 사원을 삭제하세요.
 */
-
+DELETE FROM
+    comp1
+WHERE
+    job = 'MANAGER'
+    AND deptno = 10
+;
 /*
     문제 7 ]
         comp1 테이블에 다음 데이터를 삭제하세요.
         이름의 마지막 글자(공백문자 이전문자)가 'S' 인 사원을 삭제하세요.
 */
-
+DELETE FROM
+    comp1
+WHERE
+--    SUBSTR(ename, INSTR(ename, ' ') - 1, 1) = 'S'
+    ename LIKE '%S __'
+;
 
