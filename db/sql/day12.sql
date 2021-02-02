@@ -172,6 +172,18 @@
             AS
                 질의명령
             WITH CHECK OPTION;
+            
+            
+        형식 3 ]
+            VIEW 를 이용해서 데이터를 변경하면
+            VIEW에서 사용하는 데이터만 변경 가능하다.
+            이것은 원본 테이블의 입장에서는 문제가 발생할 수 있다.
+            VIEW 를 통해서 DML 명령을 실행할 수 없도록 방지할 수 있다.
+            
+            CREATE VIEW 뷰이름
+            AS
+                질의명령
+            WITH READ ONLY;
 */
 
 /*
@@ -264,6 +276,23 @@ FROM
 
 DROP VIEW vd20;
 
+CREATE VIEW vd10
+AS
+    SELECT
+        ename, job, deptno
+    FROM
+        tmp
+    WHERE
+        deptno = 20
+;
+
+INSERT INTO
+    vd10
+VALUES(
+    '고길동', '환경', 30
+);
+
+
 CREATE VIEW vd20
 AS
     SELECT
@@ -288,13 +317,115 @@ VALUES(
     '고길동', '환경', 30
 );
 
+-- DML 명령 실행 불가능 뷰 만들기
+-- 직급이 MANAGER인 사원들의 이름, 직급, 부서번호를 볼수있는 뷰를 만드세요.
+-- 단, 수정이 불가능하도록 하세요. 읽기전용으로만 만드세요.
+CREATE VIEW vd30
+AS
+    SELECT
+        ename, job, deptno
+    FROM
+        tmp
+    WHERE
+        job = 'MANAGER'
+WITH READ ONLY
+;
+
+INSERT INTO
+    vd30
+VALUES(
+    '고길동', '환경', 30
+);
+
+-----------------------------------------------------------------------------------------
+/*
+    참고 ]
+        테이블과 마찬가지로 이미 존재하는 뷰이름과 동일한 뷰이름으로 
+        새로운 뷰를 만들 수 없다.
+        하지만 뷰는 실제 데이터를 기억하지 않고
+        보는 내용만 바꾸는 개념이므로 수시로 뷰가 달라질 수 있다.
+        
+        같은 이름의 뷰가 있어도 만들 수 있는 방법
+        
+        형식 ]
+            CREATE OR REPLACE 뷰이름
+            AS
+                질의명령
+            WITH 옵션
+            ;
+            
+            
+    참고 ]
+        뷰는 기본 테이블이 존재하고
+        그 테이블을 바라보는 창문을 만드는 개념이다.
+        그런데 기본 테이블이 없이도 뷰를 만들 수 있다.
+        
+        형식 ]
+            CREATE OR REPLCE FORCE VIEW 뷰이름
+            AS
+                질의명령
+            [WITH 옵션 ]
+            ;
+            
+        참고 ]
+            테이블이 없이 뷰가 작동되는 것이 아니고
+            테이블은 필요하지만
+            이 순간에만 없는 경우에 급할 때 사용하는 방법
+            나중에 테이블이 만들어지면 그때 데이터를 불러오게 된다.
+*/
+
+
+/*
+    뷰 강제 생성
+    
+    예제 ]
+        MEMBER 테이블의 회원정보를 보여주는 뷰를 만드세요.
+        보여줄 컬럼은 
+            NAME, ID, MAIL
+        보여줄 예정이다.
+        
+*/
+
+CREATE OR REPLACE FORCE VIEW MEMB_VIEW
+AS
+    SELECT
+        name, id, mail
+    FROM
+        member
+WITH READ ONLY
+;
+
+CREATE TABLE MEMBER(
+    name varchar2(15 char),
+    id varchar2(10 char),
+    mail varchar2(30 char)
+);
+
+insert into member
+values(
+    '홍길동', 'hong', 'hong@increpas.com'
+);
 
 
 
+------------------------------------------------------------------------------------
+/*
+    복합뷰
+        단순뷰와 동일한 방식으로 만들면 된다.
+        다만 두개 이상의 테이블을 이용한 조인을 처리하면 된다.
+*/
 
+/*
+    문제 ]
+        사원의 이름, 직급, 부서이름, 급여, 급여등급
+        을 볼수 있는 뷰(view01)을 tmp, dept, salgrade 를 이용해서 만드세요.
+*/
 
-
-
-
+/*
+    view 삭제하기
+        
+        형식 ]
+            DROP VIEW 뷰이름;
+*/
 
 
