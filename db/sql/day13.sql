@@ -349,6 +349,8 @@ WHERE
         deptno != 20
         deptno <> 20
         
+        NOT TO_CHAR(deptno) LIKE '20'
+        
     */
 );
 
@@ -392,18 +394,182 @@ AS
     문제 ]
             회원들의
                 아이디, 비밀번호, 이름, 전화번호, 이메일, 성별, 출생일, 가입일 을 관리할 
-            테이블을 만들고
+            테이블(memb01)을 만들고
             제약조건을 부여하고
             회원 정보 입력시 자동으로 1001 부터 9999 까지의 회원번호를 만들 시퀀스 M_SEQ01 을 만들어서
             친구 다섯명을 추가해주세요.
 */
 
+-- 아바타 테이블
+
+CREATE TABLE avatar(
+    ano NUMBER(2)
+        CONSTRAINT AVT_NO_PK PRIMARY KEY,
+    savename VARCHAR2(50 CHAR)
+        CONSTRAINT AVT_SNAME_UK UNIQUE
+        CONSTRAINT AVT_SNAME_NN NOT NULL,
+    dir VARCHAR2(100 CHAR) DEFAULT '/img/avatar'
+        CONSTRAINT AVT_DIR_NN NOT NULL,
+    gen CHAR(1)
+        CONSTRAINT AVT_GEN_CK CHECK (gen IN ('F', 'M', 'H'))
+        CONSTRAINT AVT_GEN_NN NOT NULL,
+    adate DATE DEFAULT sysdate
+        CONSTRAINT AVT_DATE_NN NOT NULL
+);
+
+
+-- gen 컬럼 제약조건 수정
+ALTER TABLE
+    avatar
+DROP CONSTRAINT AVT_GEN_CK;
+
+ALTER TABLE
+    avatar
+ADD 
+    CONSTRAINT AVT_GEN_CK CHECK (gen IN ('M', 'F', 'H'))
+;
+
+-- 아바타 데이터 입력
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    10, 'noimage.jpg', 'H'
+);
+
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    11, 'img_avatar1.png', 'M'
+);
+
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    12, 'img_avatar2.png', 'M'
+);
+
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    13, 'img_avatar3.png', 'M'
+);
+
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    14, 'img_avatar4.png', 'F'
+);
+
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    15, 'img_avatar5.png', 'F'
+);
+
+INSERT INTO
+    avatar(ano, savename, gen)
+VALUES(
+    16, 'img_avatar6.png', 'F'
+);
+
+CREATE TABLE memb01(
+    mno NUMBER(4)
+        CONSTRAINT MEMB01_NO_PK PRIMARY KEY,
+    id VARCHAR2(10 CHAR)
+        CONSTRAINT MEMB01_ID_UK UNIQUE
+        CONSTRAINT MEMB01_ID_NN NOT NULL,
+    pw VARCHAR2(8 CHAR)
+        CONSTRAINT MEMB01_PW_NN NOT NULL,
+    name VARCHAR2(30 CHAR)
+        CONSTRAINT MEMB01_NAME_NN NOT NULL,
+    tel VARCHAR2(20 CHAR)
+        CONSTRAINT MEMB01_TEL_UK UNIQUE
+        CONSTRAINT MEMB01_TEL_NN NOT NULL,
+    mail VARCHAR2(50 CHAR)
+        CONSTRAINT MEMB01_MAIL_UK UNIQUE
+        CONSTRAINT MEMB01_MAIL_NN NOT NULL,
+    ano NUMBER(2) DEFAULT 10
+        CONSTRAINT MEMB01_ANO_FK REFERENCES avatar(ano)
+        CONSTRAINT MEMB01_ANO_NN NOT NULL,
+    gen CHAR(1)
+        CONSTRAINT MEMB01_GEN_CK CHECK (gen IN ('F', 'M'))
+        CONSTRAINT MEMB01_GEN_NN NOT NULL,
+    isshow CHAR(1) DEFAULT 'Y'
+        CONSTRAINT MEMB01_SHOW_CK CHECK (isshow IN ('Y', 'N'))
+        CONSTRAINT MEMB01_SHOW_NN NOT NULL
+);
+
+-- 회원번호 자동 생성 시퀀스 생성
+CREATE SEQUENCE m_seq01
+    START WITH 1001
+    MAXVALUE 9999
+    NOCACHE
+;
+
+-- 회원 정보 입력
+INSERT INTO
+    memb01(mno, id, pw, name, tel, mail, ano, gen)
+VALUES(
+    m_seq01.NEXTVAL, 'euns', '12345', '전은석', '010-3175-9042', 
+    'euns@increpas.com', 11, 'M'
+);
+
+INSERT INTO
+    memb01(mno, id, pw, name, tel, mail, ano, gen)
+VALUES(
+    m_seq01.NEXTVAL, 'won', '12345', '곽채원', '010-1111-1111', 
+    'won@increpas.com', 15, 'F'
+);
+
+INSERT INTO
+    memb01(mno, id, pw, name, tel, mail, ano, gen)
+VALUES(
+    m_seq01.NEXTVAL, 'woo', '12345', '윤건우', '010-5555-5555', 
+    'woo@increpas.com', 12, 'M'
+);
+
+INSERT INTO
+    memb01(mno, id, pw, name, tel, mail, ano, gen)
+VALUES(
+    m_seq01.NEXTVAL, 'taeh', '12345', '최태현', '010-2222-2222', 
+    'taeh@increpas.com', 12, 'M'
+);
+
+INSERT INTO
+    memb01(mno, id, pw, name, tel, mail, ano, gen)
+VALUES(
+    m_seq01.NEXTVAL, 'yujin', '12345', '김유진', '010-3333-3333', 
+    'yujin@increpas.com', 15, 'F'
+);
+
+INSERT INTO
+    memb01(mno, id, pw, name, tel, mail, ano, gen)
+VALUES(
+    m_seq01.NEXTVAL, 'yts', '12345', '윤태성', '010-8888-8888', 
+    'yts@increpas.com', 13, 'M'
+);
+
+commit;
 
 ------------------------------------------------------------------------------------------------------
 
+/*
+    회원들의
+    회원번호, 아이디, 이름, 메일, 전화번호, 성별, 아바타경로
+    을 조회하세요.
+    
+     성별은 남자 또는 여자로 표현하세요.
+*/
 
-
-
+SELECT
+    mno 회원번호, id 아이디, name 이름, mail 메일, tel 전화번호, 
+    DECODE(m.gen, 'M', '남자', 'F', '여자', '인간') 성별,
+    CONCAT(CONCAT(dir, '/'), savename) 아바타경로 
+FROM
+    MEMB01 m, avatar a 
+WHERE
+    m.ano = a.ano
+;
 
 
 
