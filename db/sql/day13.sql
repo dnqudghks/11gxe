@@ -569,8 +569,70 @@ FROM
     MEMB01 m, avatar a 
 WHERE
     m.ano = a.ano
+ORDER BY
+    mno
 ;
 
+-- 어제 꺼 복습
 
+SELECT
+    mno 회원번호, id 아이디, name 이름, mail 메일, tel 전화번호, 
+    sgen 성별, avt 아바타경로 
+FROM
+    (
+        SELECT
+            ROWNUM rno, mno, id, name, mail, tel, sgen, avt
+        FROM
+            (
+                SELECT
+                    mno, id, name, mail, tel, 
+                    DECODE(m.gen, 'M', '남자', 'F', '여자', '인간') sgen,
+                    CONCAT(CONCAT(dir, '/'), savename) avt 
+                FROM
+                    MEMB01 m, avatar a 
+                WHERE
+                    m.ano = a.ano
+                ORDER BY
+                    mno
+            )
+    )
+WHERE
+    rno BETWEEN 4 AND 6
+;
+
+/*
+    문제 2 ]
+        1. 회원들의 아바타를 관리할 테이블을 만드세요.
+            필요한 컬럼은 
+                아바타번호   - 숫자 2자리, 
+                저장이름     - 문자 50개, 
+                저장폴더     - 문자 100개, 기본값 '/img/avatar' 
+                성별         - 문자 1, M, F, H 만 입력
+                입력일       - 날짜데이터
+            로 관리할 예정입니다.
+            
+            단, 아바타번호는 시퀀스(avt_seq)를 만들어서 입력시 사용합니다.
+            
+            아바타 저장이름은 github 에 업로드된 avatar 폴더의 파일이름을 사용합니다.
+            
+        2.
+            회원들의
+                회원번호    - 숫자 4자리, 
+                아이디      - 문자 10 글자, 
+                비밀번호    - 문자 8글자, 
+                이름        - 문자 30 글자, 
+                전화번호    - 문자 20 글자, 
+                이메일      - 문자 50 글자, 
+                성별        - 문자 1바이트, F, M, H 만 입력가능
+                아바타      - 숫자 2자리, 
+                출생일      - 문자 10 글자, 
+                가입일      - 날짜데이터
+                활동여부    - 문자 1바이트, 기본값 'Y', 'Y'와 'N' 만 입력 가능
+            을 관리할 
+            테이블(memb01)을 만들고
+            제약조건을 부여하고
+            회원 정보 입력시 자동으로 1001 부터 9999 까지의 회원번호를 만들 시퀀스 M_SEQ01 을 만들어서
+            친구 다섯명을 추가해주세요.
+*/
 
 
