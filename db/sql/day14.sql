@@ -393,14 +393,25 @@ AS
         scott.bonus
 ;
 
-ALTER TABLE emp
-ADD
-    CONSTRAINT HELLO_EMP_NO_PK PRIMARY KEY(empno)
-;
 
 ALTER TABLE dept
 ADD
     CONSTRAINT HELLO_DEPT_NO_PK PRIMARY KEY(deptno)
+;
+
+ALTER TABLE dept
+MODIFY
+    dname CONSTRAINT HELLO_DEPT_NAME_NN NOT NULL
+;
+
+ALTER TABLE dept
+MODIFY
+    loc CONSTRAINT HELLO_DEPT_LOC_NN NOT NULL
+;
+
+ALTER TABLE emp
+ADD
+    CONSTRAINT HELLO_EMP_NO_PK PRIMARY KEY(empno)
 ;
 
 ALTER TABLE emp
@@ -417,3 +428,88 @@ ALTER TABLE emp
 MODIFY
     job CONSTRAINT HELLO_EMP_JOB_NN NOT NULL
 ;
+
+ALTER TABLE emp
+MODIFY
+    hiredate CONSTRAINT HELLO_EMP_HDATE_NN NOT NULL
+;
+
+ALTER TABLE emp
+MODIFY
+    sal CONSTRAINT HELLO_EMP_SAL_NN NOT NULL
+;
+
+ALTER TABLE emp
+MODIFY
+    deptno CONSTRAINT HELLO_EMP_DNO_NN NOT NULL
+;
+
+ALTER TABLE salgrade
+ADD
+    CONSTRAINT HELLO_SGRD_GRD_PK PRIMARY KEY(grade)
+;
+
+-- 서버에 수업 내용 올려뒀으니 참고해서 해보세요..
+-- 제약조건 추가는 위에 코드 지우고 직접 해보시기 바랍니다.
+
+----------------------------------------------------------------------------------
+/*
+    제약조건의 종류
+        
+        1. 기본키제약조건
+        ==> 테이블에 한개는 되도록이면 있어야 하는 제약조건
+            NOT NULL + UNIQUE
+            
+        2. 참조키 제약조건
+        ==> 다른테이블의 컬럼에 입력된 데이터를 입력할수 있는 제약조건
+            NOT NULL 은 포함되어있지 않다.
+        
+        3. 유일키 제약조건
+        ==> 이 제약조건이 정의된 컬럼의 입력데이터는 반드시 유일해야 된다.
+            
+            예 ]
+                회원가입을 할 때 아이디는 다른사람이 쓰는 아이디를 중복해서 사용할 수 없다.
+                이 경우 아이디는 유일값을 요구하는 것이고
+                이때 유일키 제약조건이 추가된 것이다.
+                
+        
+        4. NOT NULL 제약조건
+        ==> 이 제약조건이 추가된 컬럼의 입력데이터에 NULL 데이터가 입력되지 못하도록
+            하는 제약조건
+        
+        5. CHECK 제약조건
+        ==> 해당 컬럼에 입력될 데이터들이 결정되어있는 경우
+            그 데이터 이외의 값이 입력되는 것을 방지하는 제약조건
+            
+*/
+
+-- scott 계정에서 명령 처리
+INSERT INTO
+    emp(EMPNO)
+VALUES(
+    (SELECT NVL(MAX(empno) + 1, 1001) FROM emp)
+);
+
+----------------------------------------------------------------------------------
+/*낫
+    SCOTT 계정에 만들어진 
+        MEMBER, AVATAR, BOARD
+    테이블을 HELLO 계정에 복사해서 만들고
+    제약조건을 부여하세요.
+    
+    게시판 테이블을 조회할 때
+    한 페이지에 볼 수 있는 게시글 수는 3개로 하고 (필수)
+    한 페이지에서 이동가능한 페이지 수는 3개로 하세요.(옵션)
+    
+    글번호 |   제목  |   장성자 |   작성일     |   조회수 |
+    -------------------------------------------------------
+    1001        TEST    euns        2021/02/04      0
+    1002        TEST    euns        2021/02/04      0
+    1003        TEST    euns        2021/02/04      0   
+    --------------------------------------------------------
+            [이전] [1] [2] [3] [ 다음 ]
+    
+*/
+
+select 0 / 3 from dual;
+----------------------------------------------------------------------------------
