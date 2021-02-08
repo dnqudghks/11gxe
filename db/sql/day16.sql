@@ -655,6 +655,43 @@ exec emp_info0201(7902);
         -- 조인 명령을 사용해서 처리하세요.
         -- TYPE 변수를 만들어서 처리하세요.
 */
+SELECT
+    e.ename, e.job, se.ename
+FROM
+    emp e, emp se
+WHERE
+    e.mgr = se.empno(+)
+    AND e.empno = 7839
+;
+
+CREATE OR REPLACE PROCEDURE emp_info03(
+    eno emp.empno%TYPE
+)
+IS
+    name emp.ename%TYPE;
+    vjob emp.job%TYPE;
+--    sename name%TYPE;
+    sename emp.ename%TYPE;
+BEGIN
+    SELECT
+        e.ename, e.job, NVL(se.ename, 'NONE')
+    INTO
+        name, vjob, sename
+    FROM
+        emp e, emp se
+    WHERE
+        e.mgr = se.empno(+)
+        AND e.empno = eno
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || name);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || vjob);
+    DBMS_OUTPUT.PUT_LINE('상사이름 : ' || sename);
+    
+END;
+/
+
+exec emp_info03(7839);
 
 /*
     문제 7 ]
@@ -669,6 +706,45 @@ exec emp_info0201(7902);
         
 */
 
+SELECT
+    ename, job, sal, grade
+FROM
+    emp, salgrade
+WHERE
+    sal BETWEEN losal AND hisal -- 조인조건
+    AND ename = 'KING'          -- 일반조건
+;
+
+CREATE OR REPLACE PROCEDURE emp_info04(
+    name emp.ename%TYPE
+)
+IS
+    vemp emp%ROWTYPE;
+    vgrade salgrade%ROWTYPE;
+BEGIN
+    SELECT
+        job, sal, grade
+    INTO
+        vemp.job, vemp.sal, vgrade.grade
+    FROM
+        emp, salgrade
+    WHERE
+        sal BETWEEN losal AND hisal -- 조인조건
+        AND ename = name          -- 일반조건
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || name);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || vemp.job);
+    DBMS_OUTPUT.PUT_LINE('사원급여 : ' || vemp.sal);
+    DBMS_OUTPUT.PUT_LINE('급여등급 : ' || vgrade.grade); 
+    DBMS_OUTPUT.PUT_LINE('사원상사 : ' || vemp.mgr); 
+    
+END;
+/
+
+execute emp_info04('KING');
+
+
 /*
     문제 8 ]
         사원의 이름을 입력하면
@@ -678,9 +754,31 @@ exec emp_info0201(7902);
         ROWTYPE 변수로 처리하세요.
 */
 
+CREATE OR REPLACE PROCEDURE emp_info05(
+    name emp.ename%TYPE
+)
+IS
+    vemp emp%ROWTYPE;
+BEGIN
+    SELECT
+        ename, job, sal, hiredate
+    INTO
+        vemp.ename, vemp.job, vemp.sal, vemp.hiredate
+    FROM
+        emp
+    WHERE
+        ename = name
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || vemp.ename);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || vemp.job);
+    DBMS_OUTPUT.PUT_LINE('사원급여 : ' || vemp.sal);
+    DBMS_OUTPUT.PUT_LINE('입 사 일 : ' || TO_CHAR(vemp.hiredate, 'YYYY-MM-DD'));     
+    
+END;
+/
 
-
-
+exec emp_info05('KING');
 
 
 
