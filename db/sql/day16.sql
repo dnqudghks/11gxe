@@ -249,6 +249,36 @@ commit;
         실행하세요.
 */
 
+UPDATE
+    tmp1
+SET
+    sal = sal * 1.4
+WHERE
+    LENGTH(ename) = xx
+;
+
+CREATE OR REPLACE PROCEDURE salup_proc03(
+    nlen IN NUMBER
+)
+IS
+BEGIN
+    UPDATE
+        tmp1
+    SET
+        sal = sal * 1.4
+    WHERE
+        LENGTH(ename) = nlen
+    ;
+    
+    commit;
+    
+    DBMS_OUTPUT.PUT_LINE('*** 이름이 ' || nlen || 
+                            ' 글자인 사원들의 급여를 40% 인상했습니다.');
+END;
+/
+
+execute salup_proc03(5);
+
 /*
     문제 3 ]
         
@@ -261,6 +291,90 @@ commit;
         그 사원의 이름과 직급, 급여를 출력하는 프로시저(get_info01)를 작성하고
         실행하세요.
 */
+SELECT
+    rno, empno
+FROM
+    (
+        SELECT
+            ROWNUM rno, empno
+        FROM
+            tmp1
+    )
+WHERE
+    rno = 4
+;
+
+CREATE OR REPLACE PROCEDURE low_proc01
+IS
+    trno NUMBER := 1;
+    tmax NUMBER ;
+    eno NUMBER;
+BEGIN
+    SELECT
+        COUNT(*)
+    INTO 
+        tmax
+    FROM
+        tmp1
+    ;
+    
+    LOOP
+        SELECT
+            empno
+        INTO
+            eno
+        FROM
+            (
+                SELECT
+                    ROWNUM rno, empno
+                FROM
+                    tmp1
+            )
+        WHERE
+            rno = trno
+        ;
+        
+        DBMS_OUTPUT.PUT_LINE(eno);
+        
+        trno := trno + 1;
+        
+        IF trno > tmax THEN -- trno(회차)가  tmax(전체사원수)  보다 커지면 즉시 종료하세요.. 
+            exit;
+        END IF;
+        
+    END LOOP;
+    
+END;
+/
+
+-- get_info01 프로시저
+CREATE OR REPLACE PROCEDURE get_info01(
+    eno IN NUMBER
+)
+IS
+    name VARCHAR2(50);
+    vjob VARCHAR2(50);
+    vsal NUMBER;
+BEGIN
+    SELECT
+        ename, job, sal
+    INTO 
+        name, vjob, vsal
+    FROM
+        tmp1
+    WHERE
+        empno = eno
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || name);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || vjob);
+    DBMS_OUTPUT.PUT_LINE('사원급여 : ' || vsal);
+END;
+/
+
+exec low_proc01;
+
+exec get_info01(7902);
 
 /*
     문제 4 ]
@@ -278,7 +392,70 @@ commit;
         
 */
 
+SELECT
+    deptno, ename, job, sal, min
+FROM
+    tmp1,
+    (
+        SELECT
+            deptno dno, MIN(sal) min 
+        FROM
+            tmp1
+        GROUP BY
+            deptno
+    )
+WHERE
+    deptno = dno -- 조인조건
+    AND sal = min
+    AND deptno = 30
+;
 
+CREATE OR REPLACE PROCEDURE lowsal01(
+    dno IN NUMBER
+)
+IS
+    rname VARCHAR2(50);
+    rjob VARCHAR2(50);
+    rsal NUMBER;
+    rmin NUMBER;
+BEGIN
+    SELECT
+        MIN(sal)
+    INTO
+        rmin
+    FROM
+        tmp1
+    GROUP BY
+        deptno
+    HAVING
+        deptno = dno
+    ;
+    
+    SELECT
+        ename, job, sal
+    INTO
+        rname, rjob, rsal
+    FROM
+        tmp1
+    WHERE
+        deptno = dno
+        and sal = rmin
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('부서번호 : ' || dno || ' 번');
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || rname);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || rjob);
+    DBMS_OUTPUT.PUT_LINE('사원급여 : ' || rsal);
+    DBMS_OUTPUT.PUT_LINE('부서최저급여 : ' || rmin);
+    
+EXCEPTION WHEN OTHERS THEN
+    DBMS_OUTPUT.PUT_LINE('### 최저 급여자가 한명이 아닙니다.');
+END;
+/
+
+exec lowsal01(10);
+exec lowsal01(20);
+exec lowsal01(30);
 
 DBMS_OUTPUT.PUT_LINE('부서번호 : ' || 00 || ' 번');
 DBMS_OUTPUT.PUT_LINE('사원이름 : ' || xxxx);
