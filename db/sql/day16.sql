@@ -390,8 +390,28 @@ exec get_info01(7902);
         의 형태로 조회해서 보여주는 프로시저를 작성하고
         실행하세요.
         
+        ==> 해당 부서번호의 최저급여를 조회.
+            ==> 부서번화와 최저급여가 같은 사원을 조회하세요.
+        
 */
+select
+    MIN(sal)
+from    
+    tmp1
+where
+    deptno = 10
+;
 
+-- 1300 이 조회되는데 급여가 이 금액과 같은 사원을 10부서에서 조회한다.
+SELECT
+    ename, job, sal, deptno
+FROM
+    tmp1
+WHERE
+    deptno = 10
+    AND sal = 1300
+;
+---------------------------------------------------------------------------
 SELECT
     deptno, ename, job, sal, min
 FROM
@@ -462,6 +482,208 @@ DBMS_OUTPUT.PUT_LINE('사원이름 : ' || xxxx);
 DBMS_OUTPUT.PUT_LINE('사원직급 : ' || xxxxxxxxxx);
 DBMS_OUTPUT.PUT_LINE('사원급여 : ' || 0000000);
 DBMS_OUTPUT.PUT_LINE('부서최저급여 : ' || 0000000);
+
+--------------------------------------------------------------------------------
+/*
+    문제 5 ]
+        사원번호를 입력하면
+        해당 사원의 이름, 직책, 부서이름, 부서위치가 출력되는 
+        프로시저(emp_info02)를 만들어서 실행하세요. 
+        
+        --> 조인을 사용해서 처래해보세요....(emp_info0201)
+*/
+-- 사원번호를 입력하면 사원의 정보를 조회하는 질의명령
+SELECT
+    ename, job, deptno
+FROM
+    tmp1
+WHERE
+    empno = 7782
+;
+
+-- 사원의 부서번호로 부서정보 조회하는 질의명령
+SELECT
+    dname, loc
+FROM
+    dept
+WHERE
+    deptno = 10
+;
+
+-- emp_info02 프로시저 작성
+CREATE OR REPLACE PROCEDURE emp_info02(
+    eno NUMBER
+)
+IS
+    name VARCHAR2(50);
+    vjob VARCHAR2(50);
+    bsname VARCHAR2(50);
+    bsloc VARCHAR2(50);
+    dno NUMBER;
+BEGIN
+    SELECT
+        ename, job, deptno
+    INTO
+        name, vjob, dno
+    FROM
+        tmp1
+    WHERE
+        empno = eno
+    ;
+    
+    SELECT
+        dname, loc
+    INTO    -- 조회결과를 내부에서 사용할 때 사용하는 절, 
+            -- 반드시 위에서 만든 변수이름이 일치해야하고
+            -- 조회절의 필드의 데이터를 담을 순서대로 나열해야 한다.
+        bsname, bsloc
+    FROM
+        dept
+    WHERE
+        deptno = dno
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || name);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || vjob);
+    DBMS_OUTPUT.PUT_LINE('부서이름 : ' || bsname);
+    DBMS_OUTPUT.PUT_LINE('부서위치 : ' || bsloc);
+END;
+/
+
+exec emp_info02(7839);
+
+/*
+
+*****
+중요 ]
+
+    1. TYPE 변수 선언
+    변수를 만들 때 변수의 형태를 지정해줘야 한다.
+    문제는 이 변수 중에는 질의의 결과와 연관된 변수가 존재한다.
+    이때 크기가 다르면 문제가 발생할 수 있다.
+    예를 들면
+        사원번호를 기억할 변수를 number(2)으로 두자리로 만들게 되면
+        이 변수에 사원번호를 기억시킬 수 없게된다.
+    또는 데이터베이스가 변경되어도 문제가 발생할 수 있다.
+    이렇게 되면 프로시저를 수정해야 하는 불편함이 생긴다.
+    
+    이런 경우를 대비해서 만드는 것이 %TYPE에 의한 변수 선언이다.
+    이것은 이미 만들어진 타입을 그대로 복사해서 
+    같은 타입, 크기의 변수로 만들어 준다.
+    
+    1. 이미 만들어진 변수와 동일한 타입으로 만드는 방법
+        
+        예 ]
+            d_name VARCHAR2(20);
+            d_job d_name%TYPE;
+            --> d_name의 변수 형태와 동일한 형태의 변수가 만들어진다.
+            
+    2. 데이터베이스의 타입과 동일한 타입으로 만드는 방법
+        형식 ]
+            
+            변수이름    테이블이름.필드이름%TYPE;
+            
+        예]
+            d_name dept.dname%TYPE;
+            --> dept 테이블의 dname 필드와 동일한 형태, 크기를 가지는
+                d_name 변수를 만드세요.
+                
+    2. ROWTYPE 에 의한 변수 선언
+        --> TYPE에 의한 변수 선언의 경우 필드 한개의 데이터 형태, 크기를
+            복사해서 사용하는 방법이다.
+            
+            %ROWTYPE은 테이블 전체(한 행의 전체 타입)의 데이터형태, 크기를
+            복사해서 사용하는 방법이다.
+            
+            형식 ]
+                
+                변수이름    테이블이름%ROWTYPE;
+                
+                ==> 이 변수는 마치 내부에 변수를 가지는 것 처럼 사용된다.
+                
+                사용 ]
+                    
+                    변수이름.필드이름
+                    
+                    으로 사용한다.
+                
+                예 ]
+                    
+                    vdept dept%ROWTYPE;
+                    
+                    ==> 이경우 부서이름의 변수를 사용할 경우
+                        
+                        vdept.dname
+        
+    
+    
+*/
+CREATE OR REPLACE PROCEDURE emp_info0201(
+    eno IN emp.empno%TYPE -- emp 테이블의 empno와 크기와 형태가 같은 변수
+)
+IS
+    name emp.ename%TYPE;
+    vjob emp.job%TYPE;
+    bsname dept.dname%TYPE;
+    bsloc dept.loc%TYPE;
+BEGIN
+    SELECT
+        ename, job, dname, loc
+    INTO
+        name, vjob, bsname, bsloc
+    FROM
+        emp e, dept d
+    WHERE
+        e.deptno = d.deptno
+        AND empno = eno
+    ;
+    
+    DBMS_OUTPUT.PUT_LINE('사원이름 : ' || name);
+    DBMS_OUTPUT.PUT_LINE('사원직급 : ' || vjob);
+    DBMS_OUTPUT.PUT_LINE('부서이름 : ' || bsname);
+    DBMS_OUTPUT.PUT_LINE('부서위치 : ' || bsloc);
+END;
+/
+
+exec emp_info0201(7902);
+
+
+/*
+    문제 6 ]
+        사원번호를 알려주면 그 사원의 이름, 직책, 상사이름을 
+        출력해주는 프로시저(emp_info03)를 만들고 실행하세요.
+        -- 조인 명령을 사용해서 처리하세요.
+        -- TYPE 변수를 만들어서 처리하세요.
+*/
+
+/*
+    문제 7 ]
+        사원의 이름을 입력하면
+        해당 사원의 
+            이름, 직급, 급여, 급여등급
+        을 출력하는 프로시저(emp_info04)를 만들어서 실행하세요.
+        
+        1. TYPE 변수로 처리하세요.(emp_info0401)
+        
+        2. ROWTYPE 변수를 사용해서 처리하세요.(emp_info0402)
+        
+*/
+
+/*
+    문제 8 ]
+        사원의 이름을 입력하면
+            이름, 직급, 급여, 입사일
+        을 출력해주는 프로시저(emp_info05)를 작성해서 실행하세요.
+        
+        ROWTYPE 변수로 처리하세요.
+*/
+
+
+
+
+
+
+
 
 
 
