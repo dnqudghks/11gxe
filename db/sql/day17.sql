@@ -707,6 +707,11 @@ exec getname01(7500);
                 
                 형식 ]
                     CLOSE   커서이름;
+                    
+--------------------------------------------------------------------------------------
+참고 ]
+    만약 커서가 FOR LOOP 안에서 사용되면
+    자동 OPEN, FETCH, CLOSE 가된다.
 */
 
 /*
@@ -755,5 +760,234 @@ BEGIN
 END;
 /
 
-
 exec dinfo01(10);
+
+/*
+    예제 ]
+        부서별
+            부서이름, 평균급여, 부서원수
+        를 조회해서 출력해주는 프로시저(dinfo02)를 만들어서 실행하세요.
+        단, 질의 명령은 커서를 이용해서 처리하세요.
+        FOR 반복문으로 처리하세요.
+*/
+
+CREATE OR REPLACE PROCEDURE dinfo02
+IS
+    -- 커서 선언
+    CURSOR d_info02 IS
+        SELECT
+            dname, ROUND(AVG(sal), 2) s_avg, COUNT(*) cnt
+        FROM
+            emp e, dept d
+        WHERE
+            e.deptno = d.deptno
+        GROUP BY
+            dname
+    ;
+BEGIN
+    FOR dinfo IN d_info02 LOOP
+        -- 지금 처럼 커서가 FOR LOOP 안에서 실행되면
+        -- OPEN, FETCH, CLOSE 시킬 필요가 없다.
+        
+        DBMS_OUTPUT.PUT_LINE('부서이름 : ' || dinfo.dname);
+        DBMS_OUTPUT.PUT_LINE('부서평균 : ' || dinfo.s_avg);
+        DBMS_OUTPUT.PUT_LINE('부서원수 : ' || dinfo.cnt);
+        DBMS_OUTPUT.PUT_LINE('------------------------');
+    END LOOP;
+END;
+/
+
+exec dinfo02;
+
+------------------------------------------------------------------------------------
+/*
+    참고 ]
+        명시적 커서에도 멤버 변수를 사용할 수 있다.
+        멤버 변수의 종류는 암시적 커서와 동일하다.
+        
+    예제 ]
+        사원들의 이름, 직급, 급여를 조회해서 출력하는 프로시저를 작성하고 실행하세요.
+        단, 최종적으로 출력된 사원의 수(총 사원수)를 같이 출력하세요.
+*/
+
+CREATE OR REPLACE PROCEDURE einfo03
+IS
+    -- 커서를 만든다.
+    CURSOR info03 IS
+        SELECT
+            ename, job, sal
+        FROM
+            emp
+    ;
+    
+    name emp.ename%TYPE;
+    ijob emp.job%TYPE;
+    isal emp.sal%TYPE;
+BEGIN
+    -- 커서를 연다.
+    OPEN info03;
+    
+    DBMS_OUTPUT.PUT_LINE('총 사원수 : ' || info03%ROWCOUNT);
+    LOOP
+        FETCH info03 INTO name, ijob, isal;
+        DBMS_OUTPUT.PUT_LINE('사원이름 : ' || name);
+        DBMS_OUTPUT.PUT_LINE('사원직급 : ' || ijob);
+        DBMS_OUTPUT.PUT_LINE('사원급여 : ' || isal);
+        
+        EXIT WHEN info03%NOTFOUND;
+    END LOOP;
+    
+    DBMS_OUTPUT.PUT_LINE('총 사원수 : ' || info03%ROWCOUNT);-- %rowcout 는 커서의 데이터를 모두 꺼낸수 사용한다.
+    
+    -- 다 사용한 커서는 닫아준다.
+    CLOSE info03;
+END;
+/
+
+exec einfo03;
+------------------------------------------------------------------------------------
+/*
+    참고 ]
+        커서에도 필요하면 파라미터를 받아서 사용할 수 있다.
+        
+        형식 ]
+            CURSOR  커서이름(파라미터 변수 선언) IS
+                질의명령
+            ;
+            
+        예제 ]
+            부서번호를 입력받아 해당 부서원들의 이름을 출력하는 프로시저를 작성하고 실행하세요.
+            단, 커서를 이용하세요.
+*/
+
+CREATE OR REPLACE PROCEDURE einfo04(
+    dno IN emp.deptno%TYPE
+)
+IS
+    -- 커서 선언
+    CURSOR  getname02(cdno emp.deptno%TYPE) IS
+        SELECT
+            ename
+        FROM
+            emp
+        WHERE
+            deptno = cdno
+    ;
+    
+    -- 내부변수
+    -- name emp.ename%TYPE;
+BEGIN
+    DBMS_OUTPUT.PUT_LINE('입력받은 부서번호 : ' || dno);
+    FOR tmp IN getname02(dno) LOOP
+        DBMS_OUTPUT.PUT_LINE('사원이름 : ' || tmp.ename);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('-----------------------------');
+    
+    DBMS_OUTPUT.PUT_LINE('입력 부서번호 : ' || 10);
+    FOR tmp IN getname02(10) LOOP
+        DBMS_OUTPUT.PUT_LINE('사원이름 : ' || tmp.ename);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('-----------------------------');
+    
+    DBMS_OUTPUT.PUT_LINE('입력 부서번호 : ' || 20);
+    FOR tmp IN getname02(20) LOOP
+        DBMS_OUTPUT.PUT_LINE('사원이름 : ' || tmp.ename);
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('-----------------------------');
+END;
+/
+
+EXEC einfo04(30);
+
+--------------------------------------------------------------------------------
+/*
+    참고 ]
+        
+        WHERE CURRENT OF 절
+        ==> 커서를 이용해서 다른 질의 명령을 실행하기 위한 방법
+            마치 서브질의 처럼
+            하나의 질의 명령을 실행할 때 필요한 서브질의를
+            커서로 만들어서 사용하는 방법
+            
+        예제 ] tmp1 테이블 이용
+            부서 번호와 직급을 입력하면 
+            해당 부서의 마지막 입사자의 직급을 입력직급으로 변경하는 
+            프로시저를 만들어서 실행하세요.
+*/
+
+-- 마지막 입사자의 사원번호
+SELECT
+    empno
+FROM
+    tmp1
+WHERE
+    deptno = 20
+    AND hiredate = (
+                        SELECT
+                            MAX(hiredate)
+                        FROM
+                            tmp1
+                        WHERE
+                            deptno = 20
+                    )
+;
+
+
+UPDATE
+    tmp1
+SET
+    job = 'xxxx'
+WHERE
+    hiredate = (
+                    SELECT
+                        MAX(hiredate)
+                    FROM
+                        tmp1
+                    WHERE
+                        deptno = dno
+                )
+;
+
+CREATE OR REPLACE PROCEDURE editjob01(
+    dno emp.deptno%TYPE,
+    ijob emp.job%TYPE
+)
+IS
+    CURSOR geteno01 IS
+        SELECT
+            empno
+        FROM
+            tmp1
+        WHERE
+            hiredate = (
+                        SELECT
+                            MAX(hiredate)
+                        FROM
+                            tmp1
+                        WHERE
+                            deptno = dno)
+    FOR UPDATE
+    -- WHERE CURRENT OF 절이라고 부르며
+    -- 이 커서는 UPDATE 질의 명령에서 부가적으로
+    -- 사용되는 커서임을 밝히는 것이다.
+    ;
+BEGIN
+    FOR tmp IN geteno01 LOOP
+        UPDATE
+            tmp1
+        SET
+            job = ijob
+        WHERE CURRENT OF geteno01;
+        -- 이 update 명령의 조건은 앞의 커서를 이용해서 
+        -- 커서의 결과를 이용해서 조건을 만든다.
+        
+        -- commit;
+    END LOOP;
+END;
+/
+
+exec editjob01(10, 'MANAGER');
+
+exec editjob01(20, 'MANAGER');
+
+ROLLBACK;
