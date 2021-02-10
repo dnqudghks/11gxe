@@ -1002,7 +1002,17 @@ ROLLBACK;
 */
 
 
+create or replace procedure proc01
+IS
+BEGIN
+    FOR tmp IN (SELECT ename, sal FROM emp) LOOP -- 이 경우 이 질의 명령은 암시적 커서에 해당한다.
+        DBMS_OUTPUT.PUT('사원이름 : ' || tmp.ename);
+        DBMS_OUTPUT.PUT_LINE(' | 사원급여 : ' || tmp.sal);
+    END LOOP;
+END;
+/
 
+exec proc01;
 
 
 
